@@ -1,5 +1,8 @@
 package com.david.ecommerce_api.common.error;
 
+import lombok.Getter;
+
+@Getter
 public class DomainException extends RuntimeException{
     private final ErrorCode errorCode;
     private final Object[] args;
@@ -10,11 +13,4 @@ public class DomainException extends RuntimeException{
         this.args = args;
     }
 
-    public ErrorCode getErrorCode() {
-        return  errorCode;
-    }
-
-    public Object[] getArgs() {
-        return args;
-    }
 }

@@ -1,4 +1,4 @@
-package com.david.ecommerce_api.product;
+package com.david.ecommerce_api.product.domain;
 
 import com.david.ecommerce_api.common.persistence.BaseEntity;
 import com.david.ecommerce_api.common.error.ErrorCode;
@@ -55,6 +55,12 @@ public class Product extends BaseEntity {
 
     @Column(name = "rating_count", nullable = false)
     private int ratingCount = 0;
+
+    @Column(name = "thumbnail_url", length = 1000)
+    private String thumbnailUrl;
+
+    @Column(name = "thumbnail_alt", length = 250)
+    private String thumbnailAlt;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
@@ -295,11 +301,24 @@ public class Product extends BaseEntity {
             int displayOrder,
             boolean mainImage
     ) {
-        ProductImage image = ProductImage.create(imageUrl, alt, displayOrder, mainImage);
+        ProductImage image = ProductImage.create(
+                imageUrl,
+                alt,
+                displayOrder,
+                mainImage
+        );
+
         image.attachTo(this);
 
         if (mainImage) {
             this.images.forEach(ProductImage::unmarkAsMain);
+            this.thumbnailUrl = imageUrl;
+            this.thumbnailAlt = alt;
+        }
+
+        if (this.thumbnailUrl == null) {
+            this.thumbnailUrl = imageUrl;
+            this.thumbnailAlt = alt;
         }
 
         this.images.add(image);

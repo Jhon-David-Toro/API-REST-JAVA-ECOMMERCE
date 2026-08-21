@@ -1,26 +1,26 @@
-package com.david.ecommerce_api.product;
+package com.david.ecommerce_api.product.domain;
 
 import com.david.ecommerce_api.common.error.ErrorCode;
 import com.david.ecommerce_api.common.persistence.BaseEntity;
 import com.david.ecommerce_api.common.validation.Guard;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
+        import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(
-        name = "product_colors",
+        name = "product_sizes",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "uk_product_color_name",
-                        columnNames = {"product_id", "name"}
+                        name = "uk_product_size_value",
+                        columnNames = {"product_id", "value"}
                 )
         }
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ProductColor extends BaseEntity {
+public class ProductSize extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,7 +30,7 @@ public class ProductColor extends BaseEntity {
     private String name;
 
     @Column(nullable = false, length = 20)
-    private String hex;
+    private String value;
 
     @Column(name = "display_order", nullable = false)
     private int displayOrder = 0;
@@ -42,24 +42,24 @@ public class ProductColor extends BaseEntity {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    private ProductColor(String name, String hex, int displayOrder) {
+    private ProductSize(String name, String value, int displayOrder) {
         rename(name);
-        changeHex(hex);
+        changeValue(value);
         this.displayOrder = displayOrder;
     }
 
-    public static ProductColor create(String name, String hex, int displayOrder) {
-        return new ProductColor(name, hex, displayOrder);
+    public static ProductSize create(String name, String value, int displayOrder) {
+        return new ProductSize(name, value, displayOrder);
     }
 
     public void rename(String name) {
-        Guard.notBlank(name, ErrorCode.VALIDATION_ERROR, "color_name");
+        Guard.notBlank(name, ErrorCode.VALIDATION_ERROR, "size_name");
         this.name = name.trim();
     }
 
-    public void changeHex(String hex) {
-        Guard.notBlank(hex, ErrorCode.VALIDATION_ERROR, "color_hex");
-        this.hex = hex.trim();
+    public void changeValue(String value) {
+        Guard.notBlank(value, ErrorCode.VALIDATION_ERROR, "size_value");
+        this.value = value.trim().toUpperCase();
     }
 
     public void reorder(int displayOrder) {
@@ -74,8 +74,8 @@ public class ProductColor extends BaseEntity {
         this.active = false;
     }
 
-    boolean hasSameName(String name) {
-        return this.name.equalsIgnoreCase(name.trim());
+    boolean hasSameValue(String value) {
+        return this.value.equalsIgnoreCase(value.trim());
     }
 
     boolean belongsTo(Product product) {

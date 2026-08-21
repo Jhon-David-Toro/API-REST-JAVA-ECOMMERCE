@@ -1,4 +1,4 @@
-package com.david.ecommerce_api.product;
+package com.david.ecommerce_api.product.domain;
 
 import com.david.ecommerce_api.common.persistence.BaseEntity;
 import jakarta.persistence.*;
