@@ -297,15 +297,21 @@ public class Product extends BaseEntity {
 
     public ProductImage addImage(
             String imageUrl,
+            String publicId,
             String alt,
             int displayOrder,
-            boolean mainImage
+            boolean mainImage,
+            Integer width,
+            Integer height
     ) {
         ProductImage image = ProductImage.create(
                 imageUrl,
+                publicId,
                 alt,
                 displayOrder,
-                mainImage
+                mainImage,
+                width,
+                height
         );
 
         image.attachTo(this);
@@ -326,9 +332,42 @@ public class Product extends BaseEntity {
         return image;
     }
 
-    public void removeImage(ProductImage image) {
+    public void markImageAsMain(Long imageId) {
+        ProductImage image = this.images
+                .stream()
+                .filter(item -> item.getId().equals(imageId))
+                .findFirst()
+                .orElseThrow(() -> new DomainException(ErrorCode.PRODUCT_IMAGE_NOT_FOUND));
+
+        this.images.forEach(ProductImage::unmarkAsMain);
+        image.markAsMain();
+
+        this.thumbnailUrl = image.getImageUrl();
+        this.thumbnailAlt = image.getAlt();
+    }
+
+    public ProductImage removeImage(Long imageId) {
+        ProductImage image = this.images
+                .stream()
+                .filter(item -> item.getId().equals(imageId))
+                .findFirst()
+                .orElseThrow(() -> new DomainException(ErrorCode.PRODUCT_IMAGE_NOT_FOUND));
+
         this.images.remove(image);
         image.detach();
+
+        if (image.getImageUrl().equals(this.thumbnailUrl)) {
+            ProductImage fallback = this.images.stream().findFirst().orElse(null);
+
+            this.thumbnailUrl = fallback != null ? fallback.getImageUrl() : null;
+            this.thumbnailAlt = fallback != null ? fallback.getAlt() : null;
+
+            if (fallback != null) {
+                fallback.markAsMain();
+            }
+        }
+
+        return image;
     }
 
     public ProductColor addColor(String name, String hex, int displayOrder) {

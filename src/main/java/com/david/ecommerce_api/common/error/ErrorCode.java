@@ -4,6 +4,26 @@ import org.springframework.http.HttpStatus;
 
 public enum ErrorCode {
 
+    IMAGE_INVALID_FILE(
+            "image.invalid_file",
+            HttpStatus.BAD_REQUEST
+    ),
+
+    IMAGE_UPLOAD_FAILED(
+            "image.upload_failed",
+            HttpStatus.BAD_GATEWAY
+    ),
+
+    IMAGE_DELETE_FAILED(
+            "image.delete_failed",
+            HttpStatus.BAD_GATEWAY
+    ),
+
+    PRODUCT_IMAGE_NOT_FOUND(
+            "product.image_not_found",
+            HttpStatus.NOT_FOUND
+    ),
+
     PRODUCT_INVALID_PRICE(
             "product.invalid_price",
             HttpStatus.BAD_REQUEST
@@ -26,6 +46,11 @@ public enum ErrorCode {
 
     PRODUCT_COLOR_NOT_FOUND(
             "product.color_not_found",
+            HttpStatus.NOT_FOUND
+    ),
+
+    PRODUCT_NOT_FOUND(
+            "product.not_found",
             HttpStatus.NOT_FOUND
     ),
 
