@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN ./mvm clean package -Dskiptests
+RUN ./mvm clean package -DskipTests
 
 RUN cp target/*.jar app.jar
 
