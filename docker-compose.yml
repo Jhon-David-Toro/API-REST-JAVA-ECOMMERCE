@@ -1,0 +1,45 @@
+services:
+    postgres:
+      image: postgres:18
+      container_name: ecommerce-postgres
+      restart: unless-stopped
+
+      environment:
+        POSTGRES_DB: ${DATABASE_NAME}
+        POSTGRES_USER: ${DATABASE_USERNAME}
+        POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+
+      ports:
+        - "5432:5432"
+
+      volumes:
+        - postgres_data:/var/lib/postgresql/data
+
+    api:
+      build:
+        context: .
+        dockerfile: Dockerfile
+
+      container_name: ecommerce_api
+      restart: unless-stopped
+
+      depends_on:
+        - postgres
+
+      environment:
+        DATABASE_URL: jdbc:postgresql://postgres:5432/${DATABASE_NAME}
+        DATABASE_USERNAME: ${DATABASE_USERNAME}
+        DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+
+        CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+        CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+        CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+
+        PORT: 8080
+
+      ports:
+        - "8080:8080"
+
+
+volumes:
+  postgres_data:
