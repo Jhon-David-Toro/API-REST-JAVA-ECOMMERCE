@@ -4,7 +4,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -84,5 +88,48 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(ErrorCode.VALIDATION_ERROR.httpStatus())
                 .body(response);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataConflict(
+            DataIntegrityViolationException exception,
+            HttpServletRequest request,
+            Locale locale
+    ) {
+        return respond(ErrorCode.DATA_CONFLICT, request, locale, List.of());
+    }
+
+    @ExceptionHandler({
+            ConstraintViolationException.class,
+            HttpMessageNotReadableException.class,
+            MethodArgumentTypeMismatchException.class
+    })
+    public ResponseEntity<ApiErrorResponse> handleBadRequest(
+            Exception exception,
+            HttpServletRequest request,
+            Locale locale
+    ) {
+        return respond(ErrorCode.VALIDATION_ERROR, request, locale, List.of());
+    }
+
+    private ResponseEntity<ApiErrorResponse> respond(
+            ErrorCode errorCode,
+            HttpServletRequest request,
+            Locale locale,
+            List<ApiErrorResponse.FieldErrorResponse> fields
+    ) {
+        String message = messageSource.getMessage(errorCode.messageKey(), null, errorCode.name(), locale);
+
+        return ResponseEntity
+                .status(errorCode.httpStatus())
+                .body(new ApiErrorResponse(
+                        Instant.now(),
+                        errorCode.httpStatus().value(),
+                        errorCode.httpStatus().getReasonPhrase(),
+                        errorCode.name(),
+                        message,
+                        request.getRequestURI(),
+                        fields
+                ));
     }
 }

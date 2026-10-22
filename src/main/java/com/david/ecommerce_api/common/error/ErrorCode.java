@@ -134,6 +134,21 @@ public enum ErrorCode {
             HttpStatus.NOT_FOUND
     ),
 
+    PRODUCT_SLUG_TAKEN(
+            "product.slug_taken",
+            HttpStatus.CONFLICT
+    ),
+
+    PRODUCT_NOT_DELETABLE(
+            "product.not_deletable",
+            HttpStatus.CONFLICT
+    ),
+
+    DATA_CONFLICT(
+            "data.conflict",
+            HttpStatus.CONFLICT
+    ),
+
     VALIDATION_ERROR(
             "validation.error",
             HttpStatus.BAD_REQUEST
