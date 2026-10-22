@@ -305,6 +305,11 @@ public class Product extends BaseEntity {
         this.totalSold += quantity;
     }
 
+    public void decreaseSold(long quantity) {
+        Guard.isTrue(quantity > 0, ErrorCode.STOCK_INVALID_QUANTITY, quantity);
+        this.totalSold = Math.max(0L, this.totalSold - quantity);
+    }
+
     public void updateRating(double ratingAverage, int ratingCount) {
         Guard.isTrue(ratingAverage >= 0 && ratingAverage <= 5, ErrorCode.VALIDATION_ERROR, "ratingAverage");
         Guard.isTrue(ratingCount >= 0, ErrorCode.VALIDATION_ERROR, "ratingCount");
