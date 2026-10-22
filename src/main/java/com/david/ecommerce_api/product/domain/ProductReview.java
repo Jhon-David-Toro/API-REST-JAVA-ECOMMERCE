@@ -40,6 +40,13 @@ public class ProductReview extends BaseEntity {
     @Column(nullable = false)
     private boolean approved = false;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "review_status", length = 20)
+    private ReviewStatus reviewStatus;
+
+    @Column(name = "user_id")
+    private Long userId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
@@ -74,11 +81,30 @@ public class ProductReview extends BaseEntity {
         return new ProductReview(product, customerName, rating, comment, verified);
     }
 
+    public ReviewStatus getStatus() {
+        if (this.reviewStatus != null) {
+            return this.reviewStatus;
+        }
+
+        return this.approved ? ReviewStatus.APPROVED : ReviewStatus.PENDING;
+    }
+
+    public void writtenBy(Long userId) {
+        this.userId = userId;
+    }
+
     public void approve() {
         this.approved = true;
+        this.reviewStatus = ReviewStatus.APPROVED;
     }
 
     public void reject() {
         this.approved = false;
+        this.reviewStatus = ReviewStatus.REJECTED;
+    }
+
+    public void markPending() {
+        this.approved = false;
+        this.reviewStatus = ReviewStatus.PENDING;
     }
 }
