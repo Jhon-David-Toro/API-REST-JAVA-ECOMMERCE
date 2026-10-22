@@ -1,10 +1,8 @@
 package com.david.ecommerce_api;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class EcommerceApiApplicationTests {
+class EcommerceApiApplicationTests extends ApiTestSupport {
 
 	@Test
 	void contextLoads() {

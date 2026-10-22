@@ -89,6 +89,51 @@ public enum ErrorCode {
             HttpStatus.CONFLICT
     ),
 
+    AUTH_INVALID_CREDENTIALS(
+            "auth.invalid_credentials",
+            HttpStatus.UNAUTHORIZED
+    ),
+
+    AUTH_EMAIL_TAKEN(
+            "auth.email_taken",
+            HttpStatus.CONFLICT
+    ),
+
+    AUTH_ACCOUNT_BLOCKED(
+            "auth.account_blocked",
+            HttpStatus.FORBIDDEN
+    ),
+
+    AUTH_WRONG_PASSWORD(
+            "auth.wrong_password",
+            HttpStatus.BAD_REQUEST
+    ),
+
+    USER_NOT_FOUND(
+            "user.not_found",
+            HttpStatus.NOT_FOUND
+    ),
+
+    USER_ADMIN_CANNOT_BE_BLOCKED(
+            "user.admin_cannot_be_blocked",
+            HttpStatus.CONFLICT
+    ),
+
+    TAXONOMY_SLUG_TAKEN(
+            "taxonomy.slug_taken",
+            HttpStatus.CONFLICT
+    ),
+
+    CATEGORY_NOT_FOUND(
+            "category.not_found",
+            HttpStatus.NOT_FOUND
+    ),
+
+    BRAND_NOT_FOUND(
+            "brand.not_found",
+            HttpStatus.NOT_FOUND
+    ),
+
     VALIDATION_ERROR(
             "validation.error",
             HttpStatus.BAD_REQUEST
