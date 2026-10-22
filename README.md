@@ -5,8 +5,8 @@ Spring Boot, Spring Web MVC, Spring Data JPA, Spring Security y PostgreSQL.
 
 > **Estado actual:** el catálogo público, la autenticación con JWT, la gestión de
 > usuarios y la taxonomía (categorías y marcas) están expuestos por HTTP. Los
-> pedidos y los ajustes también. Las reseñas con moderación también. Contenido del sitio y páginas siguen
-> pendientes.
+> pedidos y los ajustes también. Las reseñas con moderación también. El contenido del sitio y las páginas
+> también están expuestos.
 
 ## Contenido
 
@@ -297,6 +297,24 @@ estado o borrado recalcula la valoración media (un decimal) y el número de
 reseñas del producto. La reseña se marca `verified` si el autor compró el
 producto (un pedido no cancelado). El endpoint `GET /api/public/products/{slug}/reviews`
 paginado sigue funcionando y también ve solo las aprobadas.
+
+### Contenido del sitio y páginas
+
+```http
+GET /api/public/content            # contenido guardado, o {} si se usan los valores por defecto
+PUT /api/admin/content             # guarda el documento completo (ADMIN)
+DELETE /api/admin/content          # vuelve a los valores por defecto (204)
+
+GET /api/public/pages              # páginas publicadas
+GET /api/public/pages/{slug}       # una página publicada, 404 si no existe o es borrador
+GET, POST /api/admin/pages         # todas las páginas y creación (ADMIN)
+GET, PUT, DELETE /api/admin/pages/{id}
+```
+
+El contenido (banner, hero, estadísticas, menús y pie de página) es **un único
+documento JSON** validado por el servidor; el front lo mezcla con sus valores
+por defecto. Una página tiene `title`, `slug` (se genera del título si falta),
+`body`, `published` y `updatedAt` (milisegundos); un slug repetido responde 409.
 
 ### Administración de productos
 
