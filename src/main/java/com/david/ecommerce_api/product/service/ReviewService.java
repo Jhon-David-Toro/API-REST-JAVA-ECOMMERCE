@@ -8,11 +8,13 @@ import com.david.ecommerce_api.common.error.ErrorCode;
 import com.david.ecommerce_api.order.OrderRepository;
 import com.david.ecommerce_api.product.domain.Product;
 import com.david.ecommerce_api.product.domain.ProductReview;
+import com.david.ecommerce_api.product.domain.ProductStatus;
 import com.david.ecommerce_api.product.domain.ReviewStatus;
 import com.david.ecommerce_api.product.repository.ProductRepository;
 import com.david.ecommerce_api.product.repository.ProductReviewRepository;
 import com.david.ecommerce_api.product.web.ReviewDtos.CreateReviewRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ import java.util.List;
 public class ReviewService {
 
     private static final double RATING_SCALE = 10.0;
+    private static final int MAX_LATEST = 20;
 
     private final ProductReviewRepository reviewRepository;
     private final ProductRepository productRepository;
@@ -55,6 +58,16 @@ public class ReviewService {
     @Transactional(readOnly = true)
     public List<ProductReview> listApproved(Long productId) {
         return reviewRepository.findByProductIdAndApprovedTrueOrderByIdDesc(productId);
+    }
+
+    /**
+     * Newest approved reviews of published products, for the home page.
+     */
+    @Transactional(readOnly = true)
+    public List<ProductReview> listLatestApproved(int limit) {
+        int size = Math.max(1, Math.min(limit, MAX_LATEST));
+
+        return reviewRepository.findByApprovedTrueAndProductStatusOrderByIdDesc(ProductStatus.PUBLISHED, PageRequest.of(0, size));
     }
 
     @Transactional(readOnly = true)

@@ -20,6 +20,8 @@ public interface ProductReviewRepository extends JpaRepository<ProductReview, Lo
 
     List<ProductReview> findByProductIdAndApprovedTrue(Long productId);
 
+    List<ProductReview> findByApprovedTrueAndProductStatusOrderByIdDesc(ProductStatus status, Pageable pageable);
+
     List<ProductReview> findAllByOrderByIdDesc();
 
     List<ProductReview> findByProductIdOrderByIdDesc(Long productId);
