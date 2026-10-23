@@ -174,6 +174,11 @@ public enum ErrorCode {
             HttpStatus.CONFLICT
     ),
 
+    REVIEW_NOT_FOUND(
+            "review.not_found",
+            HttpStatus.NOT_FOUND
+    ),
+
     VALIDATION_ERROR(
             "validation.error",
             HttpStatus.BAD_REQUEST

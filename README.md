@@ -5,7 +5,7 @@ Spring Boot, Spring Web MVC, Spring Data JPA, Spring Security y PostgreSQL.
 
 > **Estado actual:** el catálogo público, la autenticación con JWT, la gestión de
 > usuarios y la taxonomía (categorías y marcas) están expuestos por HTTP. Los
-> pedidos y los ajustes también. Reseñas, contenido del sitio y páginas siguen
+> pedidos y los ajustes también. Las reseñas con moderación también. Contenido del sitio y páginas siguen
 > pendientes.
 
 ## Contenido
@@ -281,6 +281,22 @@ y total; el cliente no los envía.
   transición responde 409 (`ORDER_INVALID_STATUS_TRANSITION`).
 - El número es `SH-0001`, `SH-0002`… (según el id). Cada línea guarda una copia
   del nombre, la imagen, el precio, el color y la talla del momento de la compra.
+
+### Reseñas
+
+| Método | Ruta | Acceso | Descripción |
+|---|---|---|---|
+| GET | `/api/public/catalog/{productId}/reviews` | público | Reseñas aprobadas, la más nueva primero |
+| POST | `/api/products/{productId}/reviews` | autenticado | `{ rating (1-5), text }`; queda `pending` |
+| GET | `/api/admin/reviews?status=&productId=` | ADMIN | Todas las reseñas |
+| PATCH | `/api/admin/reviews/{id}/status` | ADMIN | `pending`, `approved` o `rejected` |
+| DELETE | `/api/admin/reviews/{id}` | ADMIN | Borra la reseña |
+
+Una reseña se publica solo cuando un administrador la aprueba. Cada cambio de
+estado o borrado recalcula la valoración media (un decimal) y el número de
+reseñas del producto. La reseña se marca `verified` si el autor compró el
+producto (un pedido no cancelado). El endpoint `GET /api/public/products/{slug}/reviews`
+paginado sigue funcionando y también ve solo las aprobadas.
 
 ### Administración de productos
 
