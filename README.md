@@ -200,6 +200,24 @@ GET /api/public/products/{slug}/reviews?sort=latest&page=0&size=6
 `sort` admite `latest` y `oldest`; `size` debe estar entre `1` y `50`.
 Solo se incluyen reseñas aprobadas de productos publicados.
 
+### Catálogo completo para la tienda
+
+```http
+GET /api/public/catalog
+GET /api/public/catalog/{id}
+```
+
+Devuelven los productos publicados con todo lo que la tienda necesita en un solo
+documento (marca, categoría, estilo, colores, tallas, stock, descripción y
+preguntas), para que el front filtre, ordene y pagine por su cuenta. Pensado
+para catálogos de unos cientos de productos.
+
+- `price` es el precio normal y `discountPrice` el precio con descuento (o
+  `null`); `discount` es el porcentaje. En la base de datos el precio actual es
+  `price` y el normal es `compareAtPrice`.
+- `image` es la imagen principal e `images` las demás.
+- `stock` es la suma del stock de las variantes activas.
+
 ### Categorías y marcas
 
 ```http
