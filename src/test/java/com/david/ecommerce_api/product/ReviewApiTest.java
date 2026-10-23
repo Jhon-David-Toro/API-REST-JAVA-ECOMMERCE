@@ -123,6 +123,24 @@ class ReviewApiTest extends ApiTestSupport {
     }
 
     @Test
+    void latestPublicReviewsOnlyShowApprovedOnesNewestFirstWithinTheLimit() throws Exception {
+        String admin = adminToken();
+        String product = publishedProduct("Latest Tee", admin);
+        String ana = customerToken();
+        String older = review(product, 5, "Older", ana);
+        String newer = review(product, 4, "Newer", ana);
+        review(product, 1, "Still pending", ana);
+        send(json(patch("/api/admin/reviews/" + older + "/status"), "{\"status\":\"approved\"}"), admin);
+        send(json(patch("/api/admin/reviews/" + newer + "/status"), "{\"status\":\"approved\"}"), admin);
+
+        mvc.perform(get("/api/public/reviews"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].text").value("Newer"));
+        mvc.perform(get("/api/public/reviews?limit=1")).andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
     void administratorsListAndFilterReviews() throws Exception {
         String admin = adminToken();
         String product = publishedProduct("Admin Tee", admin);

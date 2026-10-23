@@ -36,6 +36,11 @@ public class ReviewController {
         return reviewService.listApproved(productId).stream().map(ReviewResponse::from).toList();
     }
 
+    @GetMapping("/public/reviews")
+    public List<ReviewResponse> latest(@RequestParam(defaultValue = "6") int limit) {
+        return reviewService.listLatestApproved(limit).stream().map(ReviewResponse::from).toList();
+    }
+
     @PostMapping("/products/{productId}/reviews")
     @ResponseStatus(HttpStatus.CREATED)
     public ReviewResponse create(
