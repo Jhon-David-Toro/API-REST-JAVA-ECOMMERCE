@@ -3,10 +3,10 @@
 API REST para una plataforma de comercio electrónico, construida con Java 21,
 Spring Boot, Spring Web MVC, Spring Data JPA, Spring Security y PostgreSQL.
 
-> **Estado actual:** el catálogo público de productos es el módulo funcional
-> expuesto por HTTP. Los módulos de autenticación, usuarios, carrito, pedidos,
-> marcas y categorías tienen clases iniciales, pero todavía no exponen
-> operaciones de negocio completas.
+> **Estado actual:** el catálogo público, la autenticación con JWT, la gestión de
+> usuarios y la taxonomía (categorías y marcas) están expuestos por HTTP. Los
+> módulos de carrito, pedidos, reseñas, ajustes y contenido del sitio están
+> pendientes.
 
 ## Contenido
 
@@ -200,29 +200,68 @@ GET /api/public/products/{slug}/reviews?sort=latest&page=0&size=6
 `sort` admite `latest` y `oldest`; `size` debe estar entre `1` y `50`.
 Solo se incluyen reseñas aprobadas de productos publicados.
 
-### Endpoint técnico actual
+### Categorías y marcas
 
 ```http
-GET /users
+GET /api/public/categories        # solo las visibles
+GET /api/public/brands            # solo las visibles
 ```
 
-Es una ruta protegida por la configuración global y actualmente responde
-`API funcionando`. No representa todavía un recurso de usuarios completo.
+Respuesta de una categoría: `id`, `name`, `slug`, `description`, `image`,
+`visible`. Una marca devuelve `id`, `name`, `slug`, `logo`, `visible`.
+
+### Autenticación
+
+| Método | Ruta | Acceso | Descripción |
+|---|---|---|---|
+| POST | `/api/auth/register` | público | Crea una cuenta de cliente y devuelve `{ token, user }` (201) |
+| POST | `/api/auth/login` | público | Devuelve `{ token, user }`; 401 con credenciales inválidas, 403 si la cuenta está bloqueada |
+| GET | `/api/auth/me` | autenticado | Usuario de la sesión |
+| PUT | `/api/auth/profile` | autenticado | Cambia nombre y email (409 si el email ya existe) |
+| PUT | `/api/auth/password` | autenticado | Cambia la contraseña con `{ current, next }` (204) |
+
+El token se envía en cada petición con `Authorization: Bearer <token>`. El
+usuario devuelto tiene `id`, `name`, `email`, `role` (`admin` o `customer`),
+`blocked` y `createdAt` (milisegundos); nunca incluye la contraseña.
+
+### Administración
+
+Todas las rutas `/api/admin/**` exigen el rol `ADMIN`.
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/admin/users` | Lista de usuarios |
+| PATCH | `/api/admin/users/{id}/blocked` | Bloquea o desbloquea con `{ "blocked": true }`; un administrador no se puede bloquear |
+| GET, POST | `/api/admin/categories` | Lista todas (visibles o no) y crea |
+| GET, PUT, DELETE | `/api/admin/categories/{id}` | Consulta, edita y borra |
+| GET, POST | `/api/admin/brands` | Igual que categorías |
+| GET, PUT, DELETE | `/api/admin/brands/{id}` | Igual que categorías |
+
+Si no se envía `slug` se genera a partir del nombre; un slug repetido responde
+409 (`TAXONOMY_SLUG_TAKEN`). `visible` es `true` por omisión.
 
 ## Seguridad
 
-La configuración actual está en
+La configuración está en
 `src/main/java/com/david/ecommerce_api/config/SecurityConfig.java`:
 
-- `/api/public/**` permite acceso sin autenticación.
-- `/swagger-ui/**` y `/v3/api-docs/**` están permitidos para documentación.
-- Cualquier otra ruta exige autenticación.
-- Se deshabilita CSRF porque la API está planteada como backend REST.
-- El mecanismo configurado actualmente es HTTP Basic.
+- Sesión sin estado: cada petición se autentica con un JWT firmado (HS256).
+- `/api/public/**`, `/api/auth/login` y `/api/auth/register` son públicos.
+- `/api/admin/**` exige el rol `ADMIN`; el resto exige autenticación.
+- Si el usuario está bloqueado o ya no existe, el token deja de valer.
+- Las contraseñas se guardan con BCrypt.
+- CSRF está deshabilitado porque no se usan cookies de sesión.
+- CORS permite los orígenes de `CORS_ALLOWED_ORIGINS` (por defecto
+  `http://localhost:3000`).
 
-La aplicación todavía no define un flujo de login ni JWT. Por ello, HTTP Basic
-debe considerarse una configuración temporal/de desarrollo y usarse únicamente
-con HTTPS y credenciales gestionadas de forma segura.
+Variables de entorno nuevas:
+
+| Variable | Descripción |
+|---|---|
+| `JWT_SECRET` | Clave de firma, mínimo 32 caracteres (obligatoria) |
+| `JWT_EXPIRATION_HOURS` | Vida del token, 24 por defecto |
+| `CORS_ALLOWED_ORIGINS` | Orígenes separados por comas |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | Crean el primer administrador al arrancar si no existe; si están vacías no se crea ninguno |
 
 ## Errores
 
