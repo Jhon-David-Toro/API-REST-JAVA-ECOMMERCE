@@ -37,4 +37,6 @@ public interface ProductRepository extends
     );
 
     boolean existsBySlug(String slug);
+
+    boolean existsBySlugAndIdNot(String slug, Long id);
 }

@@ -1,5 +1,7 @@
 package com.david.ecommerce_api.product.domain;
 
+import com.david.ecommerce_api.brand.Brand;
+import com.david.ecommerce_api.category.Category;
 import com.david.ecommerce_api.common.persistence.BaseEntity;
 import com.david.ecommerce_api.common.error.ErrorCode;
 import com.david.ecommerce_api.common.error.DomainException;
@@ -12,7 +14,12 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Entity
 @Table(
@@ -68,6 +75,17 @@ public class Product extends BaseEntity {
 
     @Column(name = "published_at")
     private Instant publishedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "brand_id")
+    private Brand brand;
+
+    @Column(name = "dress_style", length = 60)
+    private String dressStyle;
 
     @OneToMany(
             mappedBy = "product",
@@ -484,6 +502,151 @@ public class Product extends BaseEntity {
         this.faqs.add(faq);
 
         return faq;
+    }
+
+    public void classify(Category category, Brand brand, String dressStyle) {
+        this.category = category;
+        this.brand = brand;
+        this.dressStyle = dressStyle == null || dressStyle.isBlank() ? null : dressStyle.trim();
+    }
+
+    public void clearImages() {
+        this.images.forEach(ProductImage::detach);
+        this.images.clear();
+        this.thumbnailUrl = null;
+        this.thumbnailAlt = null;
+    }
+
+    public void clearFeatures() {
+        this.features.clear();
+    }
+
+    public void clearFaqs() {
+        this.faqs.clear();
+    }
+
+    public void updateDetail(
+            String overview,
+            String origin,
+            String companyName,
+            String aboutCompany,
+            String careInstructions
+    ) {
+        if (this.detail == null) {
+            setDetail(ProductDetail.create(overview, origin, companyName, aboutCompany, careInstructions));
+            return;
+        }
+
+        this.detail.update(overview, origin, companyName, aboutCompany, careInstructions);
+    }
+
+    public Optional<ProductColor> findColor(String name) {
+        return this.colors.stream().filter(color -> color.hasSameName(name)).findFirst();
+    }
+
+    public Optional<ProductSize> findSize(String value) {
+        return this.sizes.stream().filter(size -> size.hasSameValue(value)).findFirst();
+    }
+
+    /**
+     * Creates the color, or updates and reactivates the one that already has that name.
+     */
+    public ProductColor upsertColor(String name, String hex, int displayOrder) {
+        Optional<ProductColor> existing = this.colors.stream()
+                .filter(color -> color.hasSameName(name))
+                .findFirst();
+
+        if (existing.isEmpty()) {
+            return addColor(name, hex, displayOrder);
+        }
+
+        ProductColor color = existing.get();
+        color.changeHex(hex);
+        color.reorder(displayOrder);
+        color.activate();
+
+        return color;
+    }
+
+    /**
+     * Creates the size, or updates and reactivates the one that already has that value.
+     */
+    public ProductSize upsertSize(String name, String value, int displayOrder) {
+        Optional<ProductSize> existing = this.sizes.stream()
+                .filter(size -> size.hasSameValue(value))
+                .findFirst();
+
+        if (existing.isEmpty()) {
+            return addSize(name, value, displayOrder);
+        }
+
+        ProductSize size = existing.get();
+        size.rename(name);
+        size.reorder(displayOrder);
+        size.activate();
+
+        return size;
+    }
+
+    /**
+     * Creates the variant of a color and size, or updates and reactivates the existing one.
+     */
+    public ProductVariant upsertVariant(
+            ProductColor color,
+            ProductSize size,
+            String sku,
+            int stock,
+            BigDecimal priceOverride,
+            boolean active
+    ) {
+        assertColorBelongsToProduct(color);
+        assertSizeBelongsToProduct(size);
+
+        Optional<ProductVariant> existing = this.variants.stream()
+                .filter(variant -> variant.matches(color, size))
+                .findFirst();
+
+        ProductVariant variant;
+
+        if (existing.isPresent()) {
+            variant = existing.get();
+            variant.changeSku(sku);
+            variant.changeStock(stock);
+            variant.changePriceOverride(priceOverride);
+        } else {
+            variant = addVariant(color, size, sku, stock, priceOverride);
+        }
+
+        if (active) {
+            variant.activate();
+        } else {
+            variant.deactivate();
+        }
+
+        return variant;
+    }
+
+    /**
+     * Deactivates every color, size and variant that is not in the given sets, so removed
+     * options disappear from the store without losing their history.
+     */
+    public void keepOnly(Collection<String> colorNames, Collection<String> sizeValues, Collection<ProductVariant> keptVariants) {
+        this.colors.stream()
+                .filter(color -> colorNames.stream().noneMatch(color::hasSameName))
+                .toList()
+                .forEach(this::deactivateColor);
+
+        this.sizes.stream()
+                .filter(size -> sizeValues.stream().noneMatch(size::hasSameValue))
+                .toList()
+                .forEach(this::deactivateSize);
+
+        Set<ProductVariant> kept = Collections.newSetFromMap(new IdentityHashMap<>());
+        kept.addAll(keptVariants);
+
+        this.variants.stream()
+                .filter(variant -> !kept.contains(variant))
+                .forEach(ProductVariant::deactivate);
     }
 
     private void assertColorBelongsToProduct(ProductColor color) {

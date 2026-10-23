@@ -51,6 +51,20 @@ public class ProductDetail extends BaseEntity {
         return detail;
     }
 
+    public void update(
+            String overview,
+            String origin,
+            String companyName,
+            String aboutCompany,
+            String careInstructions
+    ) {
+        this.overview = overview;
+        this.origin = origin;
+        this.companyName = companyName;
+        this.aboutCompany = aboutCompany;
+        this.careInstructions = careInstructions;
+    }
+
     void attachTo(Product product) {
         this.product = product;
     }

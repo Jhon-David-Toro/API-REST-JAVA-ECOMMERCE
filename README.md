@@ -224,7 +224,35 @@ El token se envía en cada petición con `Authorization: Bearer <token>`. El
 usuario devuelto tiene `id`, `name`, `email`, `role` (`admin` o `customer`),
 `blocked` y `createdAt` (milisegundos); nunca incluye la contraseña.
 
-### Administración
+### Administración de productos
+
+Todas bajo `/api/admin/products` (rol `ADMIN`):
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/admin/products?q=&status=&page=&size=` | Lista paginada (todos los estados) con búsqueda por nombre o slug |
+| GET | `/api/admin/products/{id}` | Producto completo para editar |
+| POST | `/api/admin/products` | Crea un borrador (201) |
+| PUT | `/api/admin/products/{id}` | Reemplaza el contenido del producto |
+| POST | `/api/admin/products/{id}/publish`, `unpublish`, `archive`, `restore` | Cambios de estado |
+| DELETE | `/api/admin/products/{id}` | Borra un producto no publicado (409 si está publicado) |
+
+El cuerpo de `POST` y `PUT` describe el producto entero: `name`, `slug`
+(opcional), `shortDescription`, `price`, `compareAtPrice`, `categoryId`,
+`brandId`, `dressStyle`, `images` (`imageUrl`, `publicId` opcional, `alt`,
+`main`), `colors` (`name`, `hex`), `sizes` (`name`, `value`), `variants`
+(`color`, `size`, `sku`, `stock`, `priceOverride`, `active`), `detail`,
+`features` y `faqs`.
+
+- Colores, tallas y variantes se identifican por nombre, valor y pareja
+  color/talla: se actualizan y **no cambian de id**. Los que ya no aparecen en el
+  cuerpo se desactivan (no se borran) y dejan de verse en la tienda.
+- Imágenes, características y preguntas frecuentes se reemplazan por completo.
+- Si una imagen no trae `publicId`, se usa su URL.
+- Publicar exige al menos una imagen y una variante activa (409 si no).
+- Un SKU repetido entre productos responde 409 (`DATA_CONFLICT`).
+
+### Administración de usuarios, categorías y marcas
 
 Todas las rutas `/api/admin/**` exigen el rol `ADMIN`.
 
