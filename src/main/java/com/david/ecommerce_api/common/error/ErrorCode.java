@@ -179,6 +179,11 @@ public enum ErrorCode {
             HttpStatus.NOT_FOUND
     ),
 
+    PAGE_NOT_FOUND(
+            "page.not_found",
+            HttpStatus.NOT_FOUND
+    ),
+
     VALIDATION_ERROR(
             "validation.error",
             HttpStatus.BAD_REQUEST
