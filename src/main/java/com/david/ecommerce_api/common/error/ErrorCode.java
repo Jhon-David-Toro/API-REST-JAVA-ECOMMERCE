@@ -149,6 +149,31 @@ public enum ErrorCode {
             HttpStatus.CONFLICT
     ),
 
+    PROMO_NOT_FOUND(
+            "promo.not_found",
+            HttpStatus.NOT_FOUND
+    ),
+
+    PROMO_DUPLICATED(
+            "promo.duplicated",
+            HttpStatus.BAD_REQUEST
+    ),
+
+    ORDER_NOT_FOUND(
+            "order.not_found",
+            HttpStatus.NOT_FOUND
+    ),
+
+    ORDER_INVALID_STATUS_TRANSITION(
+            "order.invalid_status_transition",
+            HttpStatus.CONFLICT
+    ),
+
+    ORDER_PRODUCT_UNAVAILABLE(
+            "order.product_unavailable",
+            HttpStatus.CONFLICT
+    ),
+
     VALIDATION_ERROR(
             "validation.error",
             HttpStatus.BAD_REQUEST

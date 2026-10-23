@@ -5,7 +5,7 @@ Spring Boot, Spring Web MVC, Spring Data JPA, Spring Security y PostgreSQL.
 
 > **Estado actual:** el catálogo público, la autenticación con JWT, la gestión de
 > usuarios y la taxonomía (categorías y marcas) están expuestos por HTTP. Los
-> módulos de carrito, pedidos, reseñas, ajustes y contenido del sitio están
+> pedidos y los ajustes también. Reseñas, contenido del sitio y páginas siguen
 > pendientes.
 
 ## Contenido
@@ -241,6 +241,46 @@ Respuesta de una categoría: `id`, `name`, `slug`, `description`, `image`,
 El token se envía en cada petición con `Authorization: Bearer <token>`. El
 usuario devuelto tiene `id`, `name`, `email`, `role` (`admin` o `customer`),
 `blocked` y `createdAt` (milisegundos); nunca incluye la contraseña.
+
+### Ajustes y códigos promocionales
+
+```http
+GET /api/public/settings               # nombre, contacto, moneda, envío
+GET /api/public/promo-codes/{code}     # { code, percent } o 404
+GET, PUT /api/admin/settings           # ajustes completos (ADMIN)
+```
+
+Los ajustes son un único registro que se crea con valores por defecto la primera
+vez (envío 15, gratis desde 200, aviso de stock bajo en 10, código `SHOP20` al
+20 %). Los ajustes públicos no incluyen los códigos promocionales.
+
+### Pedidos
+
+| Método | Ruta | Acceso | Descripción |
+|---|---|---|---|
+| POST | `/api/orders` | autenticado | Crea un pedido (201) |
+| GET | `/api/orders` | autenticado | Pedidos propios, el más nuevo primero |
+| GET | `/api/orders/{id}` | dueño o admin | Detalle (404 si es de otra persona) |
+| POST | `/api/orders/{id}/cancel` | dueño | Cancela mientras no esté entregado |
+| GET | `/api/admin/orders?status=&q=` | ADMIN | Todos los pedidos; `q` busca en número, email y nombre |
+| GET | `/api/admin/orders/{id}` | ADMIN | Detalle |
+| PATCH | `/api/admin/orders/{id}/status` | ADMIN | `{ "status": "paid" }` |
+
+El cuerpo de `POST /api/orders` lleva `items` (`productId`, `color`, `size`,
+`quantity`), `address`, `paymentMethod` (`cash_on_delivery` o `bank_transfer`),
+`email`, `notes` y `promoCode` opcionales. **Los precios y totales los calcula el
+servidor**: precio de la variante, descuento del código, envío según los ajustes
+y total; el cliente no los envía.
+
+- Cada línea se resuelve por color y talla (un producto con una sola variante
+  activa se elige solo si la línea no nombra color ni talla) y descuenta el
+  stock de la variante con bloqueo; sin stock responde 409 (`STOCK_INSUFFICIENT`),
+  y un producto no publicado 409 (`ORDER_PRODUCT_UNAVAILABLE`).
+- Estados: `pending` → `paid` → `shipped` → `delivered`; se puede cancelar desde
+  cualquiera salvo `delivered`. Cancelar devuelve el stock y las ventas. Otra
+  transición responde 409 (`ORDER_INVALID_STATUS_TRANSITION`).
+- El número es `SH-0001`, `SH-0002`… (según el id). Cada línea guarda una copia
+  del nombre, la imagen, el precio, el color y la talla del momento de la compra.
 
 ### Administración de productos
 

@@ -101,6 +101,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({
             ConstraintViolationException.class,
+            IllegalArgumentException.class,
             HttpMessageNotReadableException.class,
             MethodArgumentTypeMismatchException.class
     })
